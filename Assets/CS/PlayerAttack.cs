@@ -12,6 +12,17 @@ public class PlayerAttack : MonoBehaviour
     public Animator animator;
 
     private float lastAttackTime;
+    private PlayerHealth playerHealth;
+
+    private void Awake()
+    {
+        // 自动获取PlayerHealth组件
+        playerHealth = GetComponent<PlayerHealth>();
+        if (playerHealth == null)
+        {
+            playerHealth = GetComponentInParent<PlayerHealth>();
+        }
+    }
 
     private void Update()
     {
@@ -28,6 +39,12 @@ public class PlayerAttack : MonoBehaviour
     {
         // 检查冷却时间
         if (Time.time - lastAttackTime < attackCooldown)
+        {
+            return;
+        }
+
+        // 死亡后无法攻击
+        if (playerHealth != null && playerHealth.IsDead)
         {
             return;
         }

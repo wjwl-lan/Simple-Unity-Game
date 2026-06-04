@@ -6,6 +6,10 @@ public class PlayerHealth : MonoBehaviour
     public float maxHealth = 100f;
     public float currentHealth;
 
+    [Header("Hit Settings")]
+    [Tooltip("受击动画时长（秒），在此时间内玩家无法操作")]
+    public float hitStunDuration = 0.5f;
+
     [Header("References")]
     public MonoBehaviour thirdPersonController;
 
@@ -15,31 +19,68 @@ public class PlayerHealth : MonoBehaviour
     public bool IsDead => isDead;
 
     private bool isDead = false;
+    private Animator animator;
+    private MonoBehaviour playerInputComponent;
 
     private void Awake()
     {
         currentHealth = maxHealth;
+    }
 
-        // 自动获取ThirdPersonController
-        if (thirdPersonController == null)
+    private void Start()
+    {
+        // 获取Animator组件 - 优先本物体，然后是子物体和父物体
+        animator = GetComponent<Animator>();
+        if (animator == null)
         {
-            // StarterAssets的ThirdPersonController可能在这个名字下
-            thirdPersonController = GetComponentInChildren<UnityEngine.InputSystem.PlayerInput>();
-            // 或者直接用类型查找
-            if (thirdPersonController == null)
+            animator = GetComponentInChildren<Animator>();
+        }
+        if (animator == null)
+        {
+            animator = GetComponentInParent<Animator>();
+        }
+
+        if (animator == null)
+        {
+            Debug.LogError("PlayerHealth: Animator component not found!", this);
+        }
+        else
+        {
+            Debug.Log($"PlayerHealth: Animator found on {animator.gameObject.name}", this);
+        }
+
+        // 获取玩家输入控制组件
+        playerInputComponent = GetComponent<UnityEngine.InputSystem.PlayerInput>();
+
+        // 如果PlayerInput没找到，尝试获取StarterAssetsInputs
+        if (playerInputComponent == null)
+        {
+            var inputs = GetComponent<StarterAssets.StarterAssetsInputs>();
+            if (inputs != null)
             {
-                // 查找任何包含"Controller"或"Control"的组件
-                var components = GetComponents<MonoBehaviour>();
-                foreach (var comp in components)
+                playerInputComponent = inputs;
+            }
+        }
+
+        // 如果都没找到，尝试查找ThirdPersonController
+        if (playerInputComponent == null && thirdPersonController == null)
+        {
+            var components = GetComponents<MonoBehaviour>();
+            foreach (var comp in components)
+            {
+                var typeName = comp.GetType().Name;
+                if (typeName.Contains("ThirdPersonController"))
                 {
-                    var typeName = comp.GetType().Name;
-                    if (typeName.Contains("Controller") || typeName.Contains("Control"))
-                    {
-                        thirdPersonController = comp;
-                        break;
-                    }
+                    playerInputComponent = comp;
+                    break;
                 }
             }
+        }
+
+        // 使用外部引用作为备选
+        if (playerInputComponent == null && thirdPersonController != null)
+        {
+            playerInputComponent = thirdPersonController;
         }
     }
 
@@ -57,6 +98,76 @@ public class PlayerHealth : MonoBehaviour
         {
             Die();
         }
+        else
+        {
+            // 玩家没死，触发受击动画
+            if (animator != null)
+            {
+                Debug.Log("PlayerHealth: 触发 TrigHit 动画触发器");
+                animator.SetTrigger("TrigHit");
+            }
+
+            // 防滑步：禁用玩家控制，并在受击动画结束后恢复
+            DisablePlayerControlTemporarily();
+        }
+    }
+
+    /// <summary>
+    /// 禁用玩家控制（防滑步），并在受击动画结束后恢复
+    /// </summary>
+    private void DisablePlayerControlTemporarily()
+    {
+        if (playerInputComponent != null)
+        {
+            Debug.Log($"PlayerHealth: 禁用玩家控制 - {playerInputComponent.GetType().Name}，将在 {hitStunDuration} 秒后恢复");
+            playerInputComponent.enabled = false;
+
+            // 启动协程在受击动画结束后恢复控制
+            StartCoroutine(RestorePlayerControlAfterHit());
+        }
+        else
+        {
+            Debug.LogWarning("PlayerHealth: playerInputComponent 为 null，无法禁用玩家控制", this);
+        }
+    }
+
+    /// <summary>
+    /// 受击后恢复玩家控制的协程
+    /// </summary>
+    private System.Collections.IEnumerator RestorePlayerControlAfterHit()
+    {
+        // 等待受击动画时长
+        yield return new WaitForSeconds(hitStunDuration);
+
+        // 如果玩家已死亡，不恢复控制
+        if (isDead)
+        {
+            Debug.Log("PlayerHealth: 玩家已死亡，不恢复控制");
+            yield break;
+        }
+
+        // 恢复玩家控制
+        if (playerInputComponent != null)
+        {
+            Debug.Log($"PlayerHealth: 恢复玩家控制 - {playerInputComponent.GetType().Name}");
+            playerInputComponent.enabled = true;
+        }
+    }
+
+    /// <summary>
+    /// 禁用玩家控制（防滑步）
+    /// </summary>
+    private void DisablePlayerControl()
+    {
+        if (playerInputComponent != null)
+        {
+            Debug.Log($"PlayerHealth: 禁用玩家控制 - {playerInputComponent.GetType().Name}");
+            playerInputComponent.enabled = false;
+        }
+        else
+        {
+            Debug.LogWarning("PlayerHealth: playerInputComponent 为 null，无法禁用玩家控制", this);
+        }
     }
 
     /// <summary>
@@ -70,10 +181,18 @@ public class PlayerHealth : MonoBehaviour
         // 打印日志
         Debug.Log("玩家死亡");
 
-        // 禁用ThirdPersonController
-        if (thirdPersonController != null)
+        // 触发死亡动画
+        if (animator != null)
         {
-            thirdPersonController.enabled = false;
+            Debug.Log("PlayerHealth: 触发 TrigDead 动画触发器");
+            animator.SetTrigger("TrigDead");
         }
+        else
+        {
+            Debug.LogError("PlayerHealth: Die() 被调用，但 animator 为 null！", this);
+        }
+
+        // 防滑步：禁用玩家控制
+        DisablePlayerControl();
     }
 }
