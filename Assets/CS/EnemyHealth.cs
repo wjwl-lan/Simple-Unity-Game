@@ -70,8 +70,21 @@ public class EnemyHealth : MonoBehaviour
         // 打印日志
         Debug.Log("敌人死亡");
 
+        NotifyQuestEnemyKilled();
+
         // 1.5秒内缩小并销毁物体
         StartCoroutine(ShrinkAndDestroy());
+    }
+
+    private void NotifyQuestEnemyKilled()
+    {
+        QuestEnemyMarker marker = GetComponent<QuestEnemyMarker>();
+        if (marker == null || MainQuestManager.Instance == null)
+        {
+            return;
+        }
+
+        MainQuestManager.Instance.OnEnemyKilled(marker.EnemyType);
     }
 
     /// <summary>
