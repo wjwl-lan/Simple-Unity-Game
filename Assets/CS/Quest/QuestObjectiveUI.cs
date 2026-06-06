@@ -1,72 +1,51 @@
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
 
 public class QuestObjectiveUI : MonoBehaviour
 {
-    [SerializeField] private Text questText;
-    [SerializeField] private TMP_Text questTmpText;
+    public TMP_Text questText;
+    
+    // 新增：把完成提示面板拖到这里
+    public GameObject completionPanel;
 
-    private IMainQuestService questService;
-
-    private void OnEnable()
+    void Start()
     {
-        BindQuestService();
-        Refresh();
-    }
-
-    private void Start()
-    {
-        BindQuestService();
-        Refresh();
-    }
-
-    private void OnDisable()
-    {
-        if (questService != null)
+        if (questText == null)
         {
-            questService.QuestStageChanged -= HandleQuestStageChanged;
-            questService = null;
+            questText = GetComponent<TMP_Text>();
+        }
+
+        if (MainQuestManager.Instance != null)
+        {
+            MainQuestManager.Instance.QuestStageChanged += UpdateText;
+            UpdateText(MainQuestManager.Instance.QuestStage, "");
         }
     }
 
-    private void BindQuestService()
-    {
-        IMainQuestService service = MainQuestManager.Instance;
-        if (service == null || questService == service)
-        {
-            return;
-        }
-
-        if (questService != null)
-        {
-            questService.QuestStageChanged -= HandleQuestStageChanged;
-        }
-
-        questService = service;
-        questService.QuestStageChanged += HandleQuestStageChanged;
-    }
-
-    private void HandleQuestStageChanged(int stage, string text)
-    {
-        SetText(text);
-    }
-
-    private void Refresh()
-    {
-        SetText(questService?.GetCurrentQuestText() ?? "当前任务：与村口 NPC 对话");
-    }
-
-    private void SetText(string text)
+    void UpdateText(int stage, string message)
     {
         if (questText != null)
         {
-            questText.text = text;
+            questText.text = "当前目标: " + MainQuestManager.Instance.GetCurrentQuestText();
         }
 
-        if (questTmpText != null)
+        // 新增：检测任务是否完成
+        if (completionPanel != null)
         {
-            questTmpText.text = text;
+            if (stage == MainQuestManager.CompletedStage)
+            {
+                completionPanel.SetActive(true);
+            }
+            else
+            {
+                completionPanel.SetActive(false);
+            }
         }
+    }
+
+    void OnDestroy()
+    {
+        if (MainQuestManager.Instance != null)
+            MainQuestManager.Instance.QuestStageChanged -= UpdateText;
     }
 }
