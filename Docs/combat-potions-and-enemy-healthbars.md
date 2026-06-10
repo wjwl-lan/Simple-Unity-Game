@@ -65,12 +65,12 @@ PlayerAttack.TryAttack()
     ├─ 球形检测（OverlapSphere），Tag="Enemy"
     └─ EnemyHealth.TakeDamage(damage)
          │
-         ├─ 血量减少 → HealthChanged → EnemyHealthBar 更新
+         ├─ 血量减少 → HealthChanged → EnemyHealthBar / EnemyDummyHealthBar 更新
          ├─ HP ≤ 0 → Died 事件 → 血条隐藏
          │
          ▼
-    EnemyDummy 同步（在 TakeDamage 中额外调用）
-         └─ HP ≤ 0 → Die() → CurrencyManager.AddGold(goldDrop)
+    EnemyDummy 监听 EnemyHealth.Died
+         └─ Died → CurrencyManager.AddGold(goldDrop)
 ```
 
 ---
