@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class EnemyHealth : MonoBehaviour
@@ -12,10 +13,14 @@ public class EnemyHealth : MonoBehaviour
     private bool isDead = false;
     private EnemyAI enemyAI;
 
+    public event Action<float, float> HealthChanged;
+    public event Action Died;
+
     private void Awake()
     {
         currentHealth = maxHealth;
         enemyAI = GetComponent<EnemyAI>();
+        NotifyHealthChanged();
     }
 
     /// <summary>
@@ -26,17 +31,20 @@ public class EnemyHealth : MonoBehaviour
     {
         if (isDead) return;
 
-        currentHealth -= damage;
+        currentHealth = Mathf.Max(0f, currentHealth - damage);
 
         if (currentHealth <= 0)
         {
             Die();
+            return;
         }
         else
         {
             // 受击硬直：无法攻击、取消进行中的攻击
             if (enemyAI != null)
                 enemyAI.Stun();
+
+            NotifyHealthChanged();
 
             // 受击动画
             if (animator != null)
@@ -51,6 +59,7 @@ public class EnemyHealth : MonoBehaviour
     {
         isDead = true;
         currentHealth = 0;
+        NotifyHealthChanged();
 
         // 触发死亡动画
         if (animator != null)
@@ -73,6 +82,11 @@ public class EnemyHealth : MonoBehaviour
 
         // 打印日志
         Debug.Log("敌人死亡");
+
+        if (Died != null)
+        {
+            Died();
+        }
 
         NotifyQuestEnemyKilled();
 
@@ -114,5 +128,13 @@ public class EnemyHealth : MonoBehaviour
 
         // 销毁物体
         Destroy(gameObject);
+    }
+
+    private void NotifyHealthChanged()
+    {
+        if (HealthChanged != null)
+        {
+            HealthChanged(currentHealth, maxHealth);
+        }
     }
 }

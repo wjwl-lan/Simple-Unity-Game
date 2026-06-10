@@ -48,7 +48,7 @@ public class PlayerAttack : MonoBehaviour
     {
         get
         {
-            int total = baseDamage;
+            int total = baseDamage + attackBonus;
             if (WeaponManager.Instance != null && WeaponManager.Instance.CurrentWeaponData != null)
                 total += WeaponManager.Instance.CurrentWeaponData.attackPower;
             return total;
@@ -69,6 +69,7 @@ public class PlayerAttack : MonoBehaviour
     private static readonly int Attack3Hash = Animator.StringToHash("Attack3");
 
     private PlayerHealth playerHealth;
+    private int attackBonus;
 
     private void Awake()
     {
@@ -104,6 +105,17 @@ public class PlayerAttack : MonoBehaviour
         {
             TryHeavyAttack();
         }
+    }
+
+    public void ApplyTemporaryAttackBoost(int amount, float duration)
+    {
+        if (amount <= 0 || duration <= 0f)
+        {
+            return;
+        }
+
+        attackBonus += amount;
+        StartCoroutine(RemoveAttackBoostAfterDelay(amount, duration));
     }
 
     /// <summary>
@@ -335,6 +347,12 @@ public class PlayerAttack : MonoBehaviour
     }
 
     #endregion
+
+    private System.Collections.IEnumerator RemoveAttackBoostAfterDelay(int amount, float duration)
+    {
+        yield return new WaitForSeconds(duration);
+        attackBonus = Mathf.Max(0, attackBonus - amount);
+    }
 
     private void OnDrawGizmosSelected()
     {
