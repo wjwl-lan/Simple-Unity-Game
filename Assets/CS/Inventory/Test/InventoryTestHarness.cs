@@ -37,8 +37,6 @@ public class InventoryTestHarness : MonoBehaviour
 
         _mockDefinitions.Add(CreateMockItem("potion_health", "治理药水",
             ItemCategory.Potion, PotionEffectType.HealthRestore, 30));
-        _mockDefinitions.Add(CreateMockItem("potion_mana", "魔力药水",
-            ItemCategory.Potion, PotionEffectType.ManaRestore, 20));
         _mockDefinitions.Add(CreateMockItem("potion_attack_boost", "力量药水",
             ItemCategory.Potion, PotionEffectType.AttackBoost, 5));
         _mockDefinitions.Add(CreateMockItem("quest_stone_heart", "石像心",
@@ -276,7 +274,6 @@ public class InventoryTestHarness : MonoBehaviour
         if (GUI.Button(new Rect(x + pad, curY, innerW, btnH), "Add All Potions x3"))
         {
             InventoryManager.Instance.AddItem("potion_health", 3);
-            InventoryManager.Instance.AddItem("potion_mana", 3);
             InventoryManager.Instance.AddItem("potion_attack_boost", 3);
         }
         curY += btnH + 3;
@@ -292,7 +289,6 @@ public class InventoryTestHarness : MonoBehaviour
         if (GUI.Button(new Rect(x + pad, curY, innerW / 2 - 4, btnH), "+10 Potions each"))
         {
             InventoryManager.Instance.AddItem("potion_health", 10);
-            InventoryManager.Instance.AddItem("potion_mana", 10);
             InventoryManager.Instance.AddItem("potion_attack_boost", 10);
         }
         if (GUI.Button(new Rect(x + pad + innerW / 2 + 4, curY, innerW / 2 - 4, btnH), "Clear All"))

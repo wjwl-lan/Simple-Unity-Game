@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: Potion_AttackBoost
   m_EditorClassIdentifier: 
   itemId: potion_attack_boost
-  itemName: 力量药水
+  itemName: "\u529B\u91CF\u836F\u6C34"
   description: 
   icon: {fileID: 0}
   maxStack: 99
   itemCategory: 1
   attackPower: 0
+  weaponPrefab: {fileID: 0}
   potionEffectType: 0
-  effectValue: 0
+  effectValue: 5
   questStage: 0

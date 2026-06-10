@@ -14,6 +14,7 @@ public class PlayerPotionEffectController : MonoBehaviour
     private void Awake()
     {
         ResolveReferences();
+        Debug.Log("[PlayerPotionEffectController] Awake on " + gameObject.name);
     }
 
     private void OnEnable()
@@ -66,13 +67,19 @@ public class PlayerPotionEffectController : MonoBehaviour
         ResolveReferences();
 
         InventoryManager inventoryManager = InventoryManager.Instance;
-        if (inventoryManager == null || isSubscribed)
+        if (inventoryManager == null)
+        {
+            Debug.LogWarning("[PlayerPotionEffectController] InventoryManager.Instance is null, cannot subscribe");
+            return;
+        }
+        if (isSubscribed)
         {
             return;
         }
 
         inventoryManager.OnPotionUsed += HandlePotionUsed;
         isSubscribed = true;
+        Debug.Log("[PlayerPotionEffectController] Subscribed to OnPotionUsed, playerHealth=" + (playerHealth != null));
     }
 
     private void Unsubscribe()
@@ -99,6 +106,8 @@ public class PlayerPotionEffectController : MonoBehaviour
                 if (playerHealth != null)
                 {
                     playerHealth.Heal(effectValue);
+                    Debug.Log(string.Format("[PlayerPotionEffectController] Healed {0}, HP now: {1}/{2}",
+                        effectValue, playerHealth.currentHealth, playerHealth.maxHealth));
                 }
                 else
                 {

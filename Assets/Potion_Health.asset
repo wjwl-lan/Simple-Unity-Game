@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: Potion_Health
   m_EditorClassIdentifier: 
   itemId: potion_health
-  itemName: 治理药水
+  itemName: "\u6CBB\u7597\u836F\u6C34"
   description: 
   icon: {fileID: 0}
   maxStack: 99
   itemCategory: 1
   attackPower: 0
+  weaponPrefab: {fileID: 0}
   potionEffectType: 1
-  effectValue: 0
+  effectValue: 30
   questStage: 0

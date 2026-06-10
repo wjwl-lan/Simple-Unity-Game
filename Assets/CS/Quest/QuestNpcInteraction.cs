@@ -20,22 +20,27 @@ public class QuestNpcInteraction : MonoBehaviour
         }
     }
 
+    private bool _warned;
+
     private void Update()
     {
-        if (player == null || QuestService == null)
+        if (player == null)
         {
+            if (!_warned) { Debug.LogWarning("[QuestNpc] player is null!", this); _warned = true; }
             return;
         }
+        if (QuestService == null)
+        {
+            if (!_warned) { Debug.LogWarning("[QuestNpc] MainQuestManager.Instance is null!", this); _warned = true; }
+            return;
+        }
+        _warned = false;
 
         if (Vector3.Distance(transform.position, player.position) > interactDistance)
-        {
             return;
-        }
 
         if (Input.GetKeyDown(interactKey))
-        {
             Interact();
-        }
     }
 
     public void Interact()

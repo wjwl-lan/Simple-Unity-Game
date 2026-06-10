@@ -2,48 +2,53 @@ using UnityEngine;
 using System.Collections;
 
 /// <summary>
-/// 王座 Boss 专用 AI：
+/// 王座 Boss 专用 AI
 /// 阶段1 — 闪现撞击 + 触碰伤害
-/// 阶段2 (血量≤50%) — 额外发射能量球
+/// 阶段2 — 闪更快 + 落地冲击波
 /// </summary>
 public class BossAI : MonoBehaviour
 {
+    [Header("移动")]
+    public float moveSpeed = 0.8f;
+    [Tooltip("二阶段移动速度")]
+    public float phase2MoveSpeed = 1.2f;
+    public float stoppingDistance = 0.3f;
+    public float rotationSpeed = 180f;
+
     [Header("玩家引用")]
     public Transform player;
 
     [Header("触碰伤害")]
-    [Tooltip("碰到玩家时造成的伤害")]
+    [Tooltip("碰到玩家时每次扣多少血")]
     public float contactDamage = 20f;
-    [Tooltip("两次触碰伤害的最小间隔（秒）")]
+    [Tooltip("触碰冷却（秒）")]
     public float contactCooldown = 1f;
 
-    [Header("闪现撞击")]
+    [Header("闪现 — 阶段1")]
     [Tooltip("闪现冷却（秒）")]
-    public float teleportCooldown = 5f;
-    [Tooltip("闪现到离玩家多近（0=贴脸）")]
+    public float teleportCooldown = 6f;
+    [Tooltip("闪现到离玩家多远")]
     public float teleportOffset = 1.5f;
-    [Tooltip("闪现前蓄力/预警时间（秒）")]
+    [Tooltip("闪现前预警时间")]
     public float teleportWarmup = 0.8f;
 
-    [Header("能量球（半血后）")]
-    [Tooltip("能量球预制体")]
-    public GameObject energyBallPrefab;
-    [Tooltip("发射间隔（秒）")]
-    public float energyBallCooldown = 2f;
-    [Tooltip("每次发射几颗")]
-    public int energyBallsPerShot = 3;
-    [Tooltip("能量球速度")]
-    public float energyBallSpeed = 8f;
-    [Tooltip("发射点（boss 身上的空物体，从哪发射）")]
-    public Transform firePoint;
+    [Header("闪现 — 阶段2")]
+    [Tooltip("二阶段闪现冷却（秒）")]
+    public float phase2TeleportCooldown = 3.5f;
+    [Tooltip("二阶段闪现伤害倍率")]
+    public float phase2DamageMultiplier = 2f;
+
+    [Header("冲击波 — 阶段2")]
+    [Tooltip("落地后冲击波半径")]
+    public float shockwaveRadius = 3f;
+    [Tooltip("冲击波伤害")]
+    public float shockwaveDamage = 25f;
 
     [Header("阶段")]
-    [Tooltip("进入二阶段的血量百分比")]
     [Range(0.1f, 1f)]
     public float phase2Threshold = 0.5f;
 
-    [Header("闪现代替品")]
-    [Tooltip("闪现时播放的临时特效（一团烟之类），没做就用空物体")]
+    [Header("特效（可选）")]
     public GameObject teleportEffectPrefab;
 
     private EnemyHealth health;
@@ -51,7 +56,6 @@ public class BossAI : MonoBehaviour
     private bool inPhase2;
     private float lastContactTime;
     private float lastTeleportTime;
-    private float lastEnergyBallTime;
     private bool isTeleporting;
 
     private void Awake()
@@ -59,43 +63,54 @@ public class BossAI : MonoBehaviour
         health = GetComponent<EnemyHealth>();
         if (player == null)
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
-        if (firePoint == null)
-            firePoint = transform;
     }
 
     private void Start()
     {
-        // Boss 出生后等一会儿再开始闪现
         lastTeleportTime = Time.time + 2f;
-        lastEnergyBallTime = Time.time + 3f;
     }
 
     private void Update()
     {
-        if (isDead) return;
-        if (player == null) return;
+        if (isDead || player == null) return;
 
-        // 阶段切换检测
         if (!inPhase2 && health != null && health.currentHealth <= health.maxHealth * phase2Threshold)
         {
             EnterPhase2();
         }
 
-        // 闪现冷却到期
-        if (!isTeleporting && Time.time - lastTeleportTime >= teleportCooldown)
+        // 慢速追踪 + 面朝玩家
+        float dist = Vector3.Distance(transform.position, player.position);
+        if (!isTeleporting && dist > stoppingDistance)
+        {
+            ChasePlayer();
+        }
+
+        // 闪现
+        float cd = inPhase2 ? phase2TeleportCooldown : teleportCooldown;
+        if (!isTeleporting && Time.time - lastTeleportTime >= cd)
         {
             StartCoroutine(TeleportRoutine());
         }
+    }
 
-        // 二阶段：能量球
-        if (inPhase2 && Time.time - lastEnergyBallTime >= energyBallCooldown)
+    private void ChasePlayer()
+    {
+        Vector3 dir = (player.position - transform.position).normalized;
+        dir.y = 0;
+
+        if (dir != Vector3.zero)
         {
-            StartCoroutine(FireEnergyBalls());
+            Quaternion target = Quaternion.LookRotation(dir);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, target, rotationSpeed * Time.deltaTime);
         }
+
+        float spd = inPhase2 ? phase2MoveSpeed : moveSpeed;
+        transform.position = Vector3.MoveTowards(transform.position, player.position, spd * Time.deltaTime);
     }
 
     // ---------------------------------------------------------------
-    //  触碰伤害（Boss 身上的 Trigger Collider 调用）
+    //  触碰伤害
     // ---------------------------------------------------------------
     private void OnTriggerStay(Collider other)
     {
@@ -103,12 +118,11 @@ public class BossAI : MonoBehaviour
         if (!other.CompareTag("Player")) return;
         if (Time.time - lastContactTime < contactCooldown) return;
 
-        PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
-        if (playerHealth == null) return;
+        PlayerHealth ph = other.GetComponent<PlayerHealth>();
+        if (ph == null) return;
 
         lastContactTime = Time.time;
-        playerHealth.TakeDamage(contactDamage);
-        Debug.Log(string.Format("[BossAI] Contact damage: {0}", contactDamage));
+        ph.TakeDamage(contactDamage);
     }
 
     // ---------------------------------------------------------------
@@ -119,7 +133,6 @@ public class BossAI : MonoBehaviour
         isTeleporting = true;
         lastTeleportTime = Time.time;
 
-        // 预警
         if (teleportEffectPrefab != null)
             Instantiate(teleportEffectPrefab, transform.position, Quaternion.identity);
 
@@ -127,94 +140,67 @@ public class BossAI : MonoBehaviour
 
         if (isDead) { isTeleporting = false; yield break; }
 
-        // 目标位置：玩家附近
+        // 闪现到玩家旁边
         Vector3 dir = Random.insideUnitSphere;
         dir.y = 0;
-        if (dir == Vector3.zero) dir = Vector3.forward;
+        if (dir.magnitude < 0.01f) dir = Vector3.forward;
         Vector3 targetPos = player.position + dir.normalized * teleportOffset;
 
-        // 确保在 NavMesh 上
         UnityEngine.AI.NavMeshHit hit;
         if (UnityEngine.AI.NavMesh.SamplePosition(targetPos, out hit, 5f, UnityEngine.AI.NavMesh.AllAreas))
             targetPos = hit.position;
 
-        // 闪现
         transform.position = targetPos;
 
-        // 落地特效
         if (teleportEffectPrefab != null)
             Instantiate(teleportEffectPrefab, targetPos, Quaternion.identity);
 
-        // 闪现后立刻造成一次 AOE 伤害
-        if (Vector3.Distance(transform.position, player.position) <= teleportOffset + 1f)
+        // 闪现撞击伤害
+        float dist = Vector3.Distance(transform.position, player.position);
+        if (dist <= teleportOffset + 1.5f)
         {
+            float dmg = inPhase2 ? contactDamage * phase2DamageMultiplier : contactDamage * 1.5f;
             PlayerHealth ph = player.GetComponent<PlayerHealth>();
-            if (ph != null)
-            {
-                ph.TakeDamage(contactDamage * 1.5f);
-                Debug.Log(string.Format("[BossAI] Teleport strike: {0} damage", contactDamage * 1.5f));
-            }
+            if (ph != null) ph.TakeDamage(dmg);
+        }
+
+        // 二阶段：落地冲击波
+        if (inPhase2)
+        {
+            StartCoroutine(Shockwave());
         }
 
         isTeleporting = false;
     }
 
     // ---------------------------------------------------------------
-    //  能量球（二阶段）
+    //  冲击波（二阶段，落地后 0.3s 炸）
     // ---------------------------------------------------------------
-    private IEnumerator FireEnergyBalls()
+    private IEnumerator Shockwave()
     {
-        lastEnergyBallTime = Time.time;
+        yield return new WaitForSeconds(0.3f);
 
-        for (int i = 0; i < energyBallsPerShot; i++)
+        Collider[] hits = Physics.OverlapSphere(transform.position, shockwaveRadius);
+        foreach (var c in hits)
         {
-            if (isDead) yield break;
-
-            ShootOneBall();
-            yield return new WaitForSeconds(0.3f);
-        }
-    }
-
-    private void ShootOneBall()
-    {
-        if (energyBallPrefab == null)
-        {
-            Debug.LogWarning("[BossAI] energyBallPrefab 没赋值！在 Inspector 里拖一个预制体进去。");
-            return;
-        }
-
-        Vector3 spawnPos = firePoint != null ? firePoint.position : transform.position + Vector3.up * 1.5f;
-        GameObject ball = Instantiate(energyBallPrefab, spawnPos, Quaternion.identity);
-
-        // 飞向玩家
-        Vector3 dir = (player.position - spawnPos).normalized;
-        EnergyBall ballScript = ball.GetComponent<EnergyBall>();
-        if (ballScript != null)
-        {
-            ballScript.Init(dir, energyBallSpeed);
-        }
-        else
-        {
-            // 预制体没挂 EnergyBall 脚本 → 用 Rigidbody 推
-            Rigidbody rb = ball.GetComponent<Rigidbody>();
-            if (rb != null)
-                rb.velocity = dir * energyBallSpeed;
+            if (c.CompareTag("Player"))
+            {
+                PlayerHealth ph = c.GetComponent<PlayerHealth>();
+                if (ph != null) ph.TakeDamage(shockwaveDamage);
+                break;
+            }
         }
     }
 
     // ---------------------------------------------------------------
-    //  阶段切换
+    //  阶段 + 死亡
     // ---------------------------------------------------------------
     private void EnterPhase2()
     {
         inPhase2 = true;
-        teleportCooldown *= 0.6f;         // 闪现更频繁
-        Debug.Log("[BossAI] ⚡ 进入二阶段 — 开始发射能量球！");
+        Debug.Log("[BossAI] 进入二阶段 — 闪得更快 + 落地冲击波！");
     }
 
-    // ---------------------------------------------------------------
-    //  死亡（EnemyHealth.Die 也调用，这里做额外清理）
-    // ---------------------------------------------------------------
     public void Die()
     {
         isDead = true;
@@ -223,8 +209,7 @@ public class BossAI : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        if (player == null) return;
         Gizmos.color = Color.magenta;
-        Gizmos.DrawWireSphere(player.position, teleportOffset);
+        Gizmos.DrawWireSphere(transform.position, shockwaveRadius);
     }
 }

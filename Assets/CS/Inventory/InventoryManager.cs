@@ -68,8 +68,7 @@ public class InventoryManager : MonoBehaviour, IInventoryService
     private void CreateBuiltInDefaults()
     {
         itemDefinitions.Clear();
-        itemDefinitions.Add(MakeDef("potion_health", "治理药水", ItemCategory.Potion, PotionEffectType.HealthRestore, 30));
-        itemDefinitions.Add(MakeDef("potion_mana", "魔力药水", ItemCategory.Potion, PotionEffectType.ManaRestore, 20));
+        itemDefinitions.Add(MakeDef("potion_health", "治疗药水", ItemCategory.Potion, PotionEffectType.HealthRestore, 30));
         itemDefinitions.Add(MakeDef("potion_attack_boost", "力量药水", ItemCategory.Potion, PotionEffectType.AttackBoost, 5));
         itemDefinitions.Add(MakeDef("quest_stone_heart", "石像心", ItemCategory.QuestItem));
         itemDefinitions.Add(MakeDef("quest_flame_demon_core", "炎魔之核", ItemCategory.QuestItem));

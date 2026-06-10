@@ -20,8 +20,6 @@ public class InventoryDebugTester : MonoBehaviour
         _mockDefinitions.Clear();
         _mockDefinitions.Add(CreateMockItem("potion_health", "治理药水",
             ItemCategory.Potion, PotionEffectType.HealthRestore, 30));
-        _mockDefinitions.Add(CreateMockItem("potion_mana", "魔力药水",
-            ItemCategory.Potion, PotionEffectType.ManaRestore, 20));
         _mockDefinitions.Add(CreateMockItem("potion_attack_boost", "力量药水",
             ItemCategory.Potion, PotionEffectType.AttackBoost, 5));
         _mockDefinitions.Add(CreateMockItem("quest_stone_heart", "石像心",
@@ -155,7 +153,6 @@ public class InventoryDebugTester : MonoBehaviour
         if (GUI.Button(new Rect(pad, curY, halfW, btnH), "药水各+3"))
         {
             InventoryManager.Instance.AddItem("potion_health", 3);
-            InventoryManager.Instance.AddItem("potion_mana", 3);
             InventoryManager.Instance.AddItem("potion_attack_boost", 3);
         }
         if (GUI.Button(new Rect(pad + halfW + 4, curY, halfW, btnH), "任务道具各+1"))
@@ -169,7 +166,6 @@ public class InventoryDebugTester : MonoBehaviour
         if (GUI.Button(new Rect(pad, curY, halfW, btnH), "药水各+10"))
         {
             InventoryManager.Instance.AddItem("potion_health", 10);
-            InventoryManager.Instance.AddItem("potion_mana", 10);
             InventoryManager.Instance.AddItem("potion_attack_boost", 10);
         }
         if (GUI.Button(new Rect(pad + halfW + 4, curY, halfW, btnH), "清空全部"))

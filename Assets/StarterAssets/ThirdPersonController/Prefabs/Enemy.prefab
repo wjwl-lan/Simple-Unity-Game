@@ -162,7 +162,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   chaseRange: 10
-  attackRange: 2
+  attackTriggerRange: 3
+  damageReach: 2.5
   stoppingDistance: 1.5
   moveSpeed: 3.5
   attackCooldown: 3
@@ -176,6 +177,7 @@ MonoBehaviour:
   agent: {fileID: 478666965932776769}
   player: {fileID: 0}
   modelRoot: {fileID: 0}
+  modelYawOffset: 0
   animator: {fileID: 967099217197374428}
 --- !u!114 &2989935330425678636
 MonoBehaviour:
@@ -190,7 +192,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   chaseRange: 10
-  attackRange: 2
+  attackTriggerRange: 3
+  damageReach: 2.5
   stoppingDistance: 1.5
   moveSpeed: 3.5
   attackCooldown: 3
@@ -204,6 +207,7 @@ MonoBehaviour:
   agent: {fileID: 478666965932776769}
   player: {fileID: 0}
   modelRoot: {fileID: 0}
+  modelYawOffset: 0
   animator: {fileID: 967099217197374428}
 --- !u!1001 &6629657319046850125
 PrefabInstance:

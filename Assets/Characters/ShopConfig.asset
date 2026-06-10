@@ -17,7 +17,5 @@ MonoBehaviour:
     price: 0
   - itemId: potion_health
     price: 20
-  - itemId: potion_mana
-    price: 25
   - itemId: potion_attack_boost
-    price: 30
+    price: 50

@@ -16,7 +16,7 @@ public class AttackBoostIndicator : MonoBehaviour
     private void Start()
     {
         if (playerAttack == null) playerAttack = FindObjectOfType<PlayerAttack>();
-        if (playerAttack != null) _baseDamage = playerAttack.damage;
+        if (playerAttack != null) _baseDamage = playerAttack.baseDamage;
 
         if (indicatorRoot != null)
             indicatorRoot.SetActive(false);

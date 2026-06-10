@@ -14,8 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   items:
   - itemId: potion_health
-    price: 30
-  - itemId: potion_mana
     price: 20
   - itemId: potion_attack_boost
-    price: 25
+    price: 50

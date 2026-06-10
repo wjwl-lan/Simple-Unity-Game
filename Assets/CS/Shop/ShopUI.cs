@@ -31,6 +31,7 @@ public class ShopUI : MonoBehaviour
             InventoryManager.Instance.OnInventoryChanged += RefreshItems;
 
         BuildUI();
+        gameObject.SetActive(false);
         RefreshGold(CurrencyManager.Instance != null ? CurrencyManager.Instance.Gold : 0);
     }
 
@@ -238,6 +239,7 @@ public class ShopUI : MonoBehaviour
             Image slotBg = slotGo.AddComponent<Image>();
             slotBg.sprite = slotFrameSprite;
             slotBg.type = Image.Type.Sliced;
+            slotBg.raycastTarget = false;
         }
 
         HorizontalLayoutGroup hlg = slotGo.AddComponent<HorizontalLayoutGroup>();

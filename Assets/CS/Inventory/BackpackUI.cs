@@ -333,6 +333,7 @@ public class BackpackUI : MonoBehaviour
             Image slotBg = slotGo.AddComponent<Image>();
             slotBg.sprite = slotFrameSprite;
             slotBg.type = Image.Type.Sliced;
+            slotBg.raycastTarget = false;
         }
 
         HorizontalLayoutGroup hlg = slotGo.AddComponent<HorizontalLayoutGroup>();
@@ -446,18 +447,40 @@ public class BackpackUI : MonoBehaviour
     {
         bool newState = !gameObject.activeSelf;
         gameObject.SetActive(newState);
-        if (newState) Refresh();
+        if (newState)
+        {
+            ShowCursor();
+            Refresh();
+        }
+        else
+        {
+            RestoreCursor();
+        }
     }
 
     public void Open()
     {
         gameObject.SetActive(true);
+        ShowCursor();
         Refresh();
     }
 
     public void Close()
     {
         gameObject.SetActive(false);
+        RestoreCursor();
+    }
+
+    private void ShowCursor()
+    {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    private void RestoreCursor()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     private GameObject CreateUIElement(string name, Transform parent)
