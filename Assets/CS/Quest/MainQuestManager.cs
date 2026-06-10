@@ -62,6 +62,11 @@ public class MainQuestManager : MonoBehaviour, IMainQuestService
         SetQuestStage(Mathf.Clamp(stage, NotAcceptedStage, CompletedStage));
     }
 
+    public void ResetQuest()
+    {
+        SetQuestStage(NotAcceptedStage);
+    }
+
     void OnDestroy()
     {
         if (Instance == this)

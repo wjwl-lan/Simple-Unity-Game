@@ -98,6 +98,27 @@ public class MainQuestManagerEditModeTests
     }
 
     [Test]
+    public void ResetQuest_FromCompletedStage_ReturnsToInitialStageAndRaisesEvent()
+    {
+        int changedStage = -1;
+        string changedText = null;
+
+        questManager.QuestStageChanged += (stage, text) =>
+        {
+            changedStage = stage;
+            changedText = text;
+        };
+
+        questManager.SetQuestStageForDebug(MainQuestManager.CompletedStage);
+        questManager.ResetQuest();
+
+        Assert.AreEqual(MainQuestManager.NotAcceptedStage, questManager.QuestStage);
+        Assert.IsFalse(questManager.IsQuestCompleted);
+        Assert.AreEqual(MainQuestManager.NotAcceptedStage, changedStage);
+        Assert.AreEqual("与村口 NPC 对话", changedText);
+    }
+
+    [Test]
     public void GetCurrentQuestText_ReturnsChineseObjectiveForEveryStage()
     {
         AssertQuestText(MainQuestManager.NotAcceptedStage, "与村口 NPC 对话");
