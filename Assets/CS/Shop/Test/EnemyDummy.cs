@@ -19,6 +19,10 @@ public class EnemyDummy : MonoBehaviour
         {
             _enemyHealth.maxHealth = maxHealth;
             _enemyHealth.currentHealth = maxHealth;
+
+            // Keep dummy UI/logic in sync with the real EnemyHealth component.
+            _enemyHealth.HealthChanged += (cur, max) => { _currentHealth = Mathf.CeilToInt(cur); };
+            _enemyHealth.Died += Die;
         }
     }
 
