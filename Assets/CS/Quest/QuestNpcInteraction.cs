@@ -43,6 +43,7 @@ public class QuestNpcInteraction : MonoBehaviour
             Interact();
     }
 
+    // ... existing code ...
     public void Interact()
     {
         IMainQuestService questService = QuestService;
@@ -51,13 +52,25 @@ public class QuestNpcInteraction : MonoBehaviour
             return;
         }
 
-        Debug.Log(questService.GetNpcDialogueText(), this);
+        // Deleted:Debug.Log(questService.GetNpcDialogueText(), this);
+        
+        DialogueUI dialogueUI = FindObjectOfType<DialogueUI>();
+        if (dialogueUI != null && dialogueUI.dialoguePanel != null)
+        {
+            dialogueUI.dialogueText.text = questService.GetNpcDialogueText();
+            dialogueUI.dialoguePanel.SetActive(true);
+        }
+        else
+        {
+            Debug.Log(questService.GetNpcDialogueText(), this);
+        }
 
         if (questService.QuestStage == MainQuestManager.NotAcceptedStage)
         {
             questService.AcceptMainQuest();
         }
     }
+// ... existing code ...
 
     private void OnDrawGizmosSelected()
     {
